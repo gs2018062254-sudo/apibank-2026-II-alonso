@@ -5,7 +5,6 @@ namespace Bank.Domain.Tests
 {
     public class BankAccountTests
     {
-
         [Test]
         public void Debit_WithValidAmount_UpdatesBalance()
         {
@@ -16,33 +15,28 @@ namespace Bank.Domain.Tests
             BankAccount account =
                 new BankAccount("Bryan Walton", beginningBalance);
 
-
             account.Debit(debitAmount);
-
 
             double actual = account.Balance;
 
-            Assert.AreEqual(expected, actual,0.001);
+            Assert.AreEqual(expected, actual, 0.001);
         }
 
-
-        // ACTIVIDAD 1
         [Test]
         public void Credit_WithValidAmount_UpdatesBalance()
         {
-            double beginningBalance = 10;
-            double creditAmount = 5;
-            double expected = 15;
+            double beginningBalance = 10.00;
+            double creditAmount = 5.00;
+            double expected = 15.00;
 
             BankAccount account =
-                new BankAccount("Alumno", beginningBalance);
-
+                new BankAccount("Bryan Walton", beginningBalance);
 
             account.Credit(creditAmount);
 
+            double actual = account.Balance;
 
-            Assert.AreEqual(expected, account.Balance);
+            Assert.AreEqual(expected, actual, 0.001);
         }
-
     }
 }
