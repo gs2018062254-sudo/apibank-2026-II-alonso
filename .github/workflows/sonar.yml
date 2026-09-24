@@ -10,6 +10,10 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   sonarqube:
     name: SonarQube Analysis
@@ -35,6 +39,34 @@ jobs:
         run: |
           dotnet restore
           dotnet test --collect:"XPlat Code Coverage;Format=opencover"
-          dotnet-sonarscanner begin /k:"${{ env.SONAR_PROJECT }}" /o:"${{ env.SONAR_ORG }}" /d:sonar.token="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="*/*/*/coverage.opencover.xml" /d:sonar.qualitygate.wait=true
-          dotnet build
-          dotnet-sonarscanner end /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Iniciar análisis SonarCloud
+        run: |
+          dotnet-sonarscanner begin \
+            /k:"${{ env.SONAR_PROJECT }}" \
+            /o:"${{ env.SONAR_ORG }}" \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.cs.opencover.reportsPaths="*/*/*/coverage.opencover.xml" \
+            /d:sonar.qualitygate.wait=true
+
+      - name: Construir proyecto
+        run: dotnet build --no-incremental
+
+      - name: Finalizar análisis SonarCloud
+        run: |
+          dotnet-sonarscanner end \
+            /d:sonar.token="${{ secrets.SONAR_TOKEN }}"
+
+      - name: Construir paquete NuGet
+        run: |
+          dotnet pack ./Bank.Domain/Bank.Domain.csproj \
+            --configuration Release \
+            --output ./packages
+
+      - name: Publicar paquete en GitHub Packages
+        run: |
+          dotnet nuget push "./packages/*.nupkg" \
+            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --api-key "${{ secrets.GITHUB_TOKEN }}" \
+            --skip-duplicate
